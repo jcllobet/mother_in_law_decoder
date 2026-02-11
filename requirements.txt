@@ -1,0 +1,9 @@
+# Requirements for Family Conversation Decoder
+
+# Core live transcription
+websockets>=12.0
+pyaudio>=0.2.14
+python-dotenv>=1.0.0
+
+# Terminal UI
+rich>=13.0

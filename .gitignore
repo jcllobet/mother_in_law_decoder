@@ -1,0 +1,27 @@
+# Transcripts
+output/
+old/
+
+
+# Audio files
+*.mp3
+*.wav
+
+# Soniox cache
+.soniox_cache/
+
+
+
+# Python
+venv/
+env/
+.vscode/
+__pycache__/
+*.pyc
+.env
+family_chat/__pycache__/
+
+# OS
+.DS_Store
+
+.claude/
