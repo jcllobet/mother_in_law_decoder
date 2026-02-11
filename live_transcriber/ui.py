@@ -337,10 +337,9 @@ class LiveTranscriptUI:
                     parts.append("\n\n")
                 current_speaker = speaker
 
-                # Speaker header with emoji
-                emoji, _ = self._get_speaker_style(speaker)
+                # Speaker header inline for compact readability.
                 profile = self.session.get_speaker_profile(speaker)
-                parts.append(f"{emoji} {profile.get_label()}: ")
+                parts.append(f"{profile.get_label()}: ")
                 text = text.lstrip()
 
             # Accumulate text
@@ -395,11 +394,11 @@ class LiveTranscriptUI:
         return text.replace("<end>", "").replace("<END>", "")
 
     def _render_speaker_header(self, text: Text, speaker: Union[int, str]) -> None:
-        """Render speaker header with emoji and styled label."""
-        emoji, speaker_color = self._get_speaker_style(speaker)
+        """Render speaker header inline without emoji for stable alignment."""
+        _, speaker_color = self._get_speaker_style(speaker)
         profile = self.session.get_speaker_profile(speaker)
         label = profile.get_label()
-        text.append(f"{emoji} {label}: ", style=f"bold {speaker_color}")
+        text.append(f"{label}: ", style=f"bold {speaker_color}")
 
     def _render_transcript(self) -> Text:
         """Render transcript with inline parenthetical translations and language colors.
@@ -585,14 +584,23 @@ class LiveTranscriptUI:
         """Render hotkey hints with Christmas theme."""
         text = Text()
         if self._scroll_mode:
-            for k, d in [("j↓k↑", "scroll"), ("du", "page"), ("gG", "ends"), ("q", "exit")]:
-                text.append(f" {k}", style=CHRISTMAS_GOLD)
-                text.append(f"={d}", style="dim")
+            pairs = [("j↓k↑", "scroll"), ("du", "page"), ("gG", "ends"), ("q", "exit")]
         else:
-            for k, d in [("v", "scroll"), ("q", "quit")]:
-                text.append(f" {k}", style=CHRISTMAS_GOLD)
-                text.append(f"={d}", style="dim")
+            pairs = [("v", "scroll"), ("q", "quit")]
+
+        for i, (k, d) in enumerate(pairs):
+            if i > 0:
+                text.append("  ", style="dim")
+            text.append(k, style=CHRISTMAS_GOLD)
+            text.append(f"={d}", style="dim")
         return text
+
+    def _render_footer_bar(self) -> Text:
+        """Render a single clean footer line (status + hotkeys)."""
+        footer = self._render_status_bar()
+        footer.append(" │ ", style="dim")
+        footer.append(self._render_hotkey_bar())
+        return footer
     
     def _build_scroll_display(self) -> Group:
         """Build scroll display with Christmas theme."""
@@ -613,8 +621,7 @@ class LiveTranscriptUI:
         return Group(
             Panel(header, style=CHRISTMAS_RED),
             Panel(content, border_style=CHRISTMAS_RED),
-            self._render_status_bar(),
-            self._render_hotkey_bar(),
+            self._render_footer_bar(),
         )
     
     def _build_display(self) -> Group:
@@ -636,8 +643,7 @@ class LiveTranscriptUI:
         ))
 
         # Status and hotkeys
-        parts.append(self._render_status_bar())
-        parts.append(self._render_hotkey_bar())
+        parts.append(self._render_footer_bar())
 
         return Group(*parts)
     
