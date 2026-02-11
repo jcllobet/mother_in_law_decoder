@@ -20,6 +20,7 @@ from rich.live import Live
 from .session import Session
 from .transcription import Transcriber
 from .languages import get_language_flag
+from .branding import BrandIntro, can_render_images, fetch_logo_bytes, render_logo_text
 
 # Display settings
 LIVE_VIEW_LINES = 24
@@ -141,9 +142,11 @@ class LiveTranscriptUI:
         self,
         session: Session,
         transcriber: Transcriber,
+        brand_intro: Optional[BrandIntro] = None,
     ):
         self.session = session
         self.transcriber = transcriber
+        self.brand_intro = brand_intro
         self.console = Console()
         
         self._running = threading.Event()
@@ -534,14 +537,21 @@ class LiveTranscriptUI:
         if not full:
             return Text("Waiting for speech...", style="dim italic")
 
-        lines = str(full).split("\n")
-        if len(lines) <= LIVE_VIEW_LINES:
+        styled_lines = full.split("\n")
+        if len(styled_lines) <= LIVE_VIEW_LINES:
             return full
 
-        visible = lines[-LIVE_VIEW_LINES:]
+        visible = styled_lines[-LIVE_VIEW_LINES:]
         result = Text()
-        result.append(f"↑ {len(lines) - LIVE_VIEW_LINES} more (v=scroll) ", style=f"dim {CHRISTMAS_GREEN}")
-        result.append("\n".join(visible))
+        result.append(
+            f"↑ {len(styled_lines) - LIVE_VIEW_LINES} more (v=scroll) ",
+            style=f"dim {CHRISTMAS_GREEN}",
+        )
+        result.append("\n")
+        for i, line in enumerate(visible):
+            if i > 0:
+                result.append("\n")
+            result.append(line)
         return result
     
     def _render_status_bar(self) -> Text:
@@ -642,6 +652,65 @@ class LiveTranscriptUI:
         
         # Initial display
         self.console.clear()
+        if self.brand_intro:
+            source_logo = fetch_logo_bytes(self.brand_intro.source.logo_url, timeout_sec=5.0)
+            target_logo = fetch_logo_bytes(self.brand_intro.target.logo_url, timeout_sec=5.0)
+            source_rendered = (
+                render_logo_text(
+                    source_logo,
+                    max_width_chars=24,
+                    max_height_chars=10,
+                    style="pixelated",
+                )
+                if source_logo
+                else None
+            )
+            target_rendered = (
+                render_logo_text(
+                    target_logo,
+                    max_width_chars=44,
+                    max_height_chars=16,
+                    style="clear",
+                )
+                if target_logo
+                else None
+            )
+
+            if source_rendered:
+                self.console.print(
+                    Panel(
+                        source_rendered,
+                        title="[bold]what your mother it law says[/]",
+                        border_style=CHRISTMAS_GOLD,
+                        expand=False,
+                    )
+                )
+            else:
+                self.console.print(
+                    f"[dim]{self.brand_intro.source.name} logo:[/] "
+                    f"[link={self.brand_intro.source.logo_url}]{self.brand_intro.source.logo_url}[/link]"
+                )
+
+            self.console.print(f"[bold {CHRISTMAS_GOLD}]{self.brand_intro.sentence}[/]")
+            self.console.print(f"[italic dim]{self.brand_intro.pun_line}[/]")
+
+            if target_rendered:
+                self.console.print(
+                    Panel(
+                        target_rendered,
+                        title="[bold]translated in a language you understand[/]",
+                        border_style=CHRISTMAS_GOLD,
+                        expand=False,
+                    )
+                )
+            else:
+                self.console.print(
+                    f"[dim]{self.brand_intro.target.name} logo:[/] "
+                    f"[link={self.brand_intro.target.logo_url}]{self.brand_intro.target.logo_url}[/link]"
+                )
+            if not source_rendered and not target_rendered and not can_render_images():
+                self.console.print("[dim]Install Pillow for inline logos: pip install Pillow[/]")
+            self.console.print()
         self.console.print(f"[bold {CHRISTMAS_GREEN}]🎄 Live Translator[/]")
 
         if self.session.was_resumed:
