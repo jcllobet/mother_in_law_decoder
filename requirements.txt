@@ -7,3 +7,4 @@ python-dotenv>=1.0.0
 
 # Terminal UI
 rich>=13.0
+prompt_toolkit>=3.0.0

@@ -2,6 +2,7 @@
 output/
 old/
 
+.env
 
 # Audio files
 *.mp3

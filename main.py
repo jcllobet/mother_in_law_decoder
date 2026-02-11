@@ -8,6 +8,8 @@ import argparse
 import os
 import sys
 
+MIN_PYTHON = (3, 11)
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -26,6 +28,13 @@ DEFAULT_CONTEXT = """This is a casual conversation between people speaking diffe
 
 
 def main():
+    if sys.version_info < MIN_PYTHON:
+        print(
+            f"Error: Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ is required. "
+            f"Current version: {sys.version.split()[0]}"
+        )
+        sys.exit(1)
+
     parser = argparse.ArgumentParser(
         description="Live transcription and translation",
         formatter_class=argparse.RawDescriptionHelpFormatter,

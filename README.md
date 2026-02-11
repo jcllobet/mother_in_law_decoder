@@ -10,12 +10,12 @@ Note: _This does not currently decode subtle hints and other common in-laws lang
 
 ```bash
 # Setup
-python3 -m venv venv && source venv/bin/activate
+python3.12 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-echo "SONIOX_API_KEY=your_key" > .env  # Get one at soniox.com
+cp .env.example .env  # then set SONIOX_API_KEY in .env
 
 # Run
-python live-transcription.py --session "xmas dinner"
+python main.py --session "xmas dinner"
 ```
 
 ## Usage
@@ -67,7 +67,7 @@ Transcripts save to `output/<session>/` as JSON, TXT, and MP3. Resume anytime wi
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.11+ (3.12 recommended)
 - [Soniox API key](https://soniox.com)
 
 ## Supported Languages
